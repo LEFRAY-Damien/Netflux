@@ -3,19 +3,20 @@
 import { createApp } from "vue";
 import App from "./App.vue";
 
-// 🔥 Import du router
+// Router
 import router from "@/router/index.js";
 
-// 🔥 Import de Pinia
+// Pinia
 import { createPinia } from "pinia";
+
+// 🔥 Import CSS + JS Bootstrap
+import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 const app = createApp(App);
 
-// on ajoute Pinia
 app.use(createPinia());
-
-// on ajoute le router
 app.use(router);
 
-// puis on monte l'app
 app.mount("#app");
+
