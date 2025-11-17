@@ -50,7 +50,7 @@ const logout = () => {
         <template v-else>
 
           <li class="nav-item">
-            <router-link class="nav-link" to="/profil">Profil</router-link>
+            <router-link class="nav-link" to="/home">Profil</router-link>
           </li>
 
           <li class="nav-item">
