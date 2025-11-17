@@ -6,7 +6,7 @@
 
 <template>
     <div>
-
+<h1>Page Favori</h1>
     </div>
 </template>
 

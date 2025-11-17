@@ -6,6 +6,7 @@ export const useUserStore = defineStore("user", {
     token: localStorage.getItem("jwt_token") || null,
     user: null,
   }),
+
   actions: {
     async login(email, password) {
       try {
@@ -14,19 +15,26 @@ export const useUserStore = defineStore("user", {
         this.token = data.token;
         localStorage.setItem("jwt_token", this.token);
 
-        // Ajout du header Authorization pour toutes les requêtes futures
-        api.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
+        api.defaults.headers.common["Authorization"] = `Bearer ${this.token}`;
       } catch (err) {
         throw new Error(err.response?.data?.message || "Erreur de connexion");
       }
     },
+
+    async register(payload) {
+      try {
+        await api.post("/register", payload);
+      } catch (err) {
+        throw new Error(err.response?.data?.message || "Erreur lors de l'inscription");
+      }
+    },
+
     logout() {
       this.token = null;
       this.user = null;
       localStorage.removeItem("jwt_token");
 
-      // Supprime le header
-      delete api.defaults.headers.common['Authorization'];
+      delete api.defaults.headers.common["Authorization"];
     },
   },
 });

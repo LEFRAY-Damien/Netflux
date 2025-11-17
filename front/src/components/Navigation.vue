@@ -16,7 +16,7 @@ const logout = () => {
 <template>
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
 
-    <!-- 🔴 GAUCHE : Logo -->
+    <!--  GAUCHE : Logo -->
     <router-link to="/" class="navbar-brand">
       Netflux
     </router-link>
@@ -27,10 +27,10 @@ const logout = () => {
 
     <div class="collapse navbar-collapse" id="navbarNav">
 
-      <!-- 🔴 MILIEU : (Vide pour garder l'espace) -->
+      <!--  MILIEU : (Vide pour garder l'espace) -->
       <ul class="navbar-nav me-auto"></ul>
 
-      <!-- 🔴 DROITE : Liens -->
+      <!--  DROITE : Liens -->
       <ul class="navbar-nav ms-auto">
 
         <!-- UTILISATEUR NON CONNECTÉ -->
@@ -72,9 +72,4 @@ const logout = () => {
   </nav>
 </template>
 
-<style scoped>
-.navbar-brand {
-  font-weight: bold;
-  font-size: 1.4rem;
-}
-</style>
+<style scoped></style>

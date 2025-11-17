@@ -3,17 +3,19 @@
 import { createRouter, createWebHistory } from "vue-router";
 import LoginView from "@/views/LoginView.vue";
 import HomeView from "@/views/HomeView.vue";
-import { useUserStore } from "@/stores/user.js"; // ✅ import correct
+import RegisterView from "@/views/RegisterView.vue";
+import { useUserStore } from "@/stores/user.js"; //  import correct
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: "/", component: HomeView },
     { path: "/login", component: LoginView },
+    { path: "/register", component: RegisterView },
   ],
 });
 
-// 🔐 Middleware de protection
+//  Middleware de protection
 router.beforeEach((to) => {
   const userStore = useUserStore();
 
