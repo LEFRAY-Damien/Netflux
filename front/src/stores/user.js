@@ -13,7 +13,6 @@ export const useUserStore = defineStore("user", {
         const { data } = await api.post("/login", { email, password });
         this.token = data.token;
         localStorage.setItem("jwt_token", this.token);
-        api.defaults.headers.common["Authorization"] = `Bearer ${this.token}`;
         await this.fetchUser();
       } catch (err) {
         throw new Error(err.response?.data?.message || "Erreur de connexion");
