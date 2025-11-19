@@ -1,38 +1,49 @@
 import { defineStore } from "pinia";
 import api from "@/api/axios";
 
-export const useUserStore = defineStore("user", {
+export const useUserStore = defineStore("userStore", {
   state: () => ({
-    token: localStorage.getItem("jwt_token") || null,
     user: null,
+    token: localStorage.getItem("jwt_token") || null, // ← récupère le token au démarrage
   }),
 
   actions: {
-    async login(email, password) {
-      try {
-        const { data } = await api.post("/login", { email, password });
-        this.token = data.token;
-        localStorage.setItem("jwt_token", this.token);
-        await this.fetchUser();
-      } catch (err) {
-        throw new Error(err.response?.data?.message || "Erreur de connexion");
-      }
+    async login(credentials) {
+      const response = await api.post("/login", credentials);
+
+      // 1️⃣ On récupère le token du backend
+      this.token = response.data.token;
+
+      // 2️⃣ On sauvegarde dans localStorage (persistant)
+      localStorage.setItem("jwt_token", this.token);
+
+      // 3️⃣ On ajoute le token aux headers Axios
+      api.defaults.headers.common["Authorization"] = `Bearer ${this.token}`;
+
+      // 4️⃣ On récupère l'utilisateur connecté
+      const me = await api.get("/me");
+      this.user = me.data;
     },
 
     async fetchUser() {
+      // Appelé au démarrage si un token existe
       if (!this.token) return;
+
+      api.defaults.headers.common["Authorization"] = `Bearer ${this.token}`;
+
       try {
-        console.log("Token envoyé :", this.token);
         const { data } = await api.get("/me");
         this.user = data;
-      } catch (err) {
-        console.error("Impossible de récupérer l'utilisateur :", err);
+      } catch (error) {
+        console.error("Token invalide, suppression.", error);
+        this.logout();
       }
     },
 
     logout() {
-      this.token = null;
       this.user = null;
+      this.token = null;
+
       localStorage.removeItem("jwt_token");
       delete api.defaults.headers.common["Authorization"];
     },

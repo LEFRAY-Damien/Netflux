@@ -32,16 +32,10 @@ onMounted(async () => {
 
     <div class="row">
       <div class="col-md-3 mb-4" v-for="film in films" :key="film.id">
-        <div
-          class="card h-100"
-          style="cursor: pointer;"
-          @click="$router.push(`/contenu/${film.id}`)"
-        >
-          <img
-            :src="film.affiche"
-            class="card-img-top"
-            alt="Affiche du film"
-          />
+        <div class="card h-100" style="cursor: pointer;" @click="$router.push(`/contenu/${film.id}`)">
+          <img :src="film.affiche" class="img-fluid" style="max-height: 200px; object-fit: cover;"
+            alt="Affiche du film" />
+
           <div class="card-body">
             <h5 class="card-title">{{ film.titre }}</h5>
           </div>
@@ -56,16 +50,10 @@ onMounted(async () => {
 
     <div class="row">
       <div class="col-md-3 mb-4" v-for="serie in series" :key="serie.id">
-        <div
-          class="card h-100"
-          style="cursor: pointer;"
-          @click="$router.push(`/contenu/${serie.id}`)"
-        >
-          <img
-            :src="serie.affiche"
-            class="card-img-top"
-            alt="Affiche de la série"
-          />
+        <div class="card h-100" style="cursor: pointer;" @click="$router.push(`/contenu/${serie.id}`)">
+          <img :src="serie.affiche" class="img-fluid" style="max-height: 200px; object-fit: cover;"
+            alt="Affiche de la série" />
+
           <div class="card-body">
             <h5 class="card-title">{{ serie.titre }}</h5>
           </div>
