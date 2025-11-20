@@ -21,7 +21,7 @@
         <img
           :src="film.affiche"
           class="img-fluid rounded mb-3"
-          alt="Affiche du film"
+          alt="Affiche"
           @error="onImageError"
         />
       </div>
@@ -29,6 +29,8 @@
       <!-- Informations -->
       <div class="col-md-8">
         <h2 class="fw-bold">{{ film.titre }}</h2>
+
+        <p><strong>Type :</strong> {{ film.type || '—' }}</p>
 
         <p><strong>Année :</strong> {{ formatDate(film.anneeSortie) }}</p>
 
@@ -68,7 +70,7 @@ const userStore = useUserStore();
 const film = ref(null);
 const isFavorite = ref(false);
 
-// Charge les détails du film
+// Charge les détails du film/série
 onMounted(async () => {
   try {
     const response = await api.get(`/contenus/${route.params.id}`);
@@ -76,17 +78,17 @@ onMounted(async () => {
 
     // Vérifie si déjà en favori (si connecté)
     if (userStore.user) {
-      const favorisIds = userStore.user.favori?.map(f => f.id) || [];
+      const favorisIds = (userStore.user.favori || []).map(f => f.id);
       isFavorite.value = favorisIds.includes(film.value.id);
     }
   } catch (e) {
-    console.error('Erreur chargement film :', e);
+    console.error('Erreur chargement contenu :', e);
   }
 });
 
 // Format année
 const formatDate = (value) => {
-  if (!value) return '';
+  if (!value) return '—';
   return new Date(value).getFullYear();
 };
 
@@ -101,9 +103,12 @@ const toggleFavorite = async () => {
     alert("Vous devez être connecté pour ajouter un favori !");
     return;
   }
+
   try {
     const { data } = await api.post(`/contenus/${film.value.id}/favori`);
     isFavorite.value = data.favori;
+
+    // Recharge l'utilisateur pour actualiser ses favoris
     await userStore.fetchUser();
   } catch (error) {
     console.error("Erreur favoris :", error);
