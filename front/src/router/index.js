@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { useUserStore } from "@/stores/user.js";
+import { useAuthStore } from "@/stores/auth.js";  // <-- CHANGÉ
 
 // Vues
 import LoginView from "@/views/LoginView.vue";
@@ -11,10 +11,10 @@ import HomeView from "@/views/HomeView.vue";
 import AdminView from "@/views/AdminView.vue";
 
 const routes = [
-  // Page d'accueil affichant films + séries
+  // Page d'accueil
   { path: "/", name: "movies", component: MovieListView },
 
-  // Page détail d'un contenu (film ou série)
+  // Détail contenu
   {
     path: "/contenu/:id",
     name: "movieDetail",
@@ -22,7 +22,7 @@ const routes = [
     props: true,
   },
 
-  // Login / Register
+  // Auth
   { path: "/login", name: "login", component: LoginView },
   { path: "/register", name: "register", component: RegisterView },
 
@@ -34,15 +34,15 @@ const routes = [
     meta: { requiresAuth: true },
   },
 
-  // Espace admin
+  // Admin
   {
     path: "/admin",
     name: "admin",
     component: AdminView,
-    meta: { requiresAuth: true },
+    meta: { requiresAdmin: true },
   },
 
-  // Home interne (si tu l'utilises)
+  // Profil
   {
     path: "/home",
     name: "home",
@@ -58,16 +58,21 @@ const router = createRouter({
 
 // Middleware Auth
 router.beforeEach(async (to) => {
-  const userStore = useUserStore();
+  const authStore = useAuthStore();  // <-- CHANGÉ
 
-  // Si token mais user non chargé → on récupère le profil
-  if (userStore.token && !userStore.user) {
-    await userStore.fetchUser();
+  // Si on a un token mais pas encore le user → on récupère /api/me
+  if (authStore.token && !authStore.user) {
+    await authStore.fetchUser();
   }
 
-  // Si page protégée sans être connecté → redirection login
-  if (to.meta.requiresAuth && !userStore.token) {
+  // Protection : utilisateur non connecté
+  if (to.meta.requiresAuth && !authStore.token) {
     return "/login";
+  }
+
+  // Protection admin
+  if (to.meta.requiresAdmin && !authStore.user?.roles?.includes("ROLE_ADMIN")) {
+    return "/";
   }
 });
 

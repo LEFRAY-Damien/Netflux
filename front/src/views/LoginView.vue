@@ -27,17 +27,17 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import { useUserStore } from "@/stores/user";
+import { useAuthStore } from "@/stores/auth";  // <-- CHANGÉ
 
 const email = ref("");
 const password = ref("");
 const error = ref(null);
 
 const router = useRouter();
-const userStore = useUserStore();
+const authStore = useAuthStore();  // <-- CHANGÉ
 
 // Redirection automatique si déjà connecté
-if (userStore.token) {
+if (authStore.token) {
   router.push("/");
 }
 
@@ -45,11 +45,11 @@ const handleLogin = async () => {
   error.value = null;
 
   try {
-    // Utilisation du store pour gérer login + token
-    await userStore.login(email.value, password.value);
+    // Utilise le store auth
+    await authStore.login(email.value, password.value);
     router.push("/"); // Redirection après login réussi
   } catch (err) {
-    error.value = err.message;
+    error.value = err.response?.data?.message || "Erreur de connexion";
   }
 };
 </script>

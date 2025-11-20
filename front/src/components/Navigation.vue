@@ -1,14 +1,14 @@
 <!-- Navigation.vue -->
 
 <script setup>
-import { useUserStore } from "@/stores/user";
+import { useAuthStore } from "@/stores/auth";   // <-- CHANGÉ
 import { useRouter } from "vue-router";
 
-const userStore = useUserStore();
+const authStore = useAuthStore();               // <-- CHANGÉ
 const router = useRouter();
 
 const logout = () => {
-  userStore.logout();
+  authStore.logout();                           // <-- CHANGÉ
   router.push("/login");
 };
 </script>
@@ -27,14 +27,12 @@ const logout = () => {
 
     <div class="collapse navbar-collapse" id="navbarNav">
 
-      <!--  MILIEU : (Vide pour garder l'espace) -->
       <ul class="navbar-nav me-auto"></ul>
 
-      <!--  DROITE : Liens -->
       <ul class="navbar-nav ms-auto">
 
         <!-- UTILISATEUR NON CONNECTÉ -->
-        <template v-if="!userStore.token">
+        <template v-if="!authStore.token">
 
           <li class="nav-item">
             <router-link class="nav-link" to="/login">Connexion</router-link>
@@ -57,7 +55,7 @@ const logout = () => {
             <router-link class="nav-link" to="/favoris">Favoris</router-link>
           </li>
 
-          <li class="nav-item" v-if="userStore.user?.roles?.includes('ROLE_ADMIN')">
+          <li class="nav-item" v-if="authStore.user?.roles?.includes('ROLE_ADMIN')">
             <router-link class="nav-link" to="/admin">Admin</router-link>
           </li>
 
@@ -71,5 +69,3 @@ const logout = () => {
     </div>
   </nav>
 </template>
-
-<style scoped></style>

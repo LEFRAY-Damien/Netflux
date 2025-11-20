@@ -1,16 +1,32 @@
 <template>
-  <div class="container mt-4">
-    <h2 class="mb-4 text-center">Profil utilisateur</h2>
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">Profil utilisateur</h2>
 
+    <!-- Si l'utilisateur est chargé -->
     <div v-if="userStore.user">
-      <ul class="list-group">
-        <li class="list-group-item"><strong>Nom :</strong> {{ userStore.user.nom }}</li>
-        <li class="list-group-item"><strong>Prénom :</strong> {{ userStore.user.prenom }}</li>
-        <li class="list-group-item"><strong>Email :</strong> {{ userStore.user.email }}</li>
-        <li class="list-group-item"><strong>Rôles :</strong> {{ userStore.user.roles.join(', ') }}</li>
-      </ul>
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Informations personnelles</h5>
+
+          <ul class="list-group">
+            <li class="list-group-item">
+              <strong>Nom :</strong> {{ userStore.user.nom }}
+            </li>
+            <li class="list-group-item">
+              <strong>Prénom :</strong> {{ userStore.user.prenom }}
+            </li>
+            <li class="list-group-item">
+              <strong>Email :</strong> {{ userStore.user.email }}
+            </li>
+            <li class="list-group-item">
+              <strong>Rôles :</strong> {{ userStore.user.roles.join(", ") }}
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
 
+    <!-- Si pas encore chargé -->
     <div v-else class="text-center text-muted">
       Chargement du profil...
     </div>
