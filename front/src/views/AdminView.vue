@@ -134,11 +134,11 @@ onMounted(loadContenus);
           </td>
           <td>
             <button class="btn btn-warning btn-sm me-2" @click="openEditModal(c)">
-              ✏ Modifier
+               Modifier
             </button>
 
             <button class="btn btn-danger btn-sm" @click="deleteContenu(c.id)">
-              🗑 Supprimer
+               Supprimer
             </button>
           </td>
         </tr>
