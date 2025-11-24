@@ -25,31 +25,34 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { useAuthStore } from "@/stores/auth";  // <-- CHANGÉ
+import { useAuthStore } from "@/stores/auth";
 
 const email = ref("");
 const password = ref("");
 const error = ref(null);
 
 const router = useRouter();
-const authStore = useAuthStore();  // <-- CHANGÉ
+const authStore = useAuthStore();
 
-// Redirection automatique si déjà connecté
-if (authStore.token) {
-  router.push("/");
-}
+// Redirection si déjà connecté
+onMounted(() => {
+  if (authStore.token) {
+    router.push("/");
+  }
+});
 
 const handleLogin = async () => {
   error.value = null;
 
   try {
-    // Utilise le store auth
     await authStore.login(email.value, password.value);
-    router.push("/"); // Redirection après login réussi
+    router.push("/"); 
   } catch (err) {
-    error.value = err.response?.data?.message || "Erreur de connexion";
+    error.value = "Email ou mot de passe incorrect";
   }
 };
 </script>
+
+<style scoped></style>

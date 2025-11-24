@@ -1,5 +1,4 @@
 <!-- RegisterView.vue -->
-
 <template>
     <div class="container mt-5" style="max-width: 450px">
         <h2 class="text-center mb-4">Créer un compte</h2>
@@ -38,10 +37,10 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import { useUserStore } from "@/stores/user";
+import { useAuthStore } from "@/stores/auth"; // ✔ CORRECT STORE
 
 const router = useRouter();
-const userStore = useUserStore();
+const authStore = useAuthStore();
 
 const nom = ref("");
 const prenom = ref("");
@@ -53,19 +52,19 @@ const handleRegister = async () => {
     error.value = null;
 
     try {
-        await userStore.register({
+        await authStore.register({
             nom: nom.value,
             prenom: prenom.value,
             email: email.value,
             password: password.value,
         });
 
+        // Redirection après inscription
         router.push("/login");
     } catch (err) {
         error.value = err.message || "Erreur d'inscription.";
     }
 };
 </script>
-
 
 <style scoped></style>

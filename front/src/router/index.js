@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { useAuthStore } from "@/stores/auth.js";  
+import { useAuthStore } from "@/stores/auth.js";
 
 // Vues
 import LoginView from "@/views/LoginView.vue";
@@ -11,44 +11,17 @@ import HomeView from "@/views/HomeView.vue";
 import AdminView from "@/views/AdminView.vue";
 
 const routes = [
-  // Page d'accueil
   { path: "/", name: "movies", component: MovieListView },
+  { path: "/contenu/:id", name: "movieDetail", component: MovieDetailView, props: true },
 
-  // Détail contenu
-  {
-    path: "/contenu/:id",
-    name: "movieDetail",
-    component: MovieDetailView,
-    props: true,
-  },
-
-  // Auth
   { path: "/login", name: "login", component: LoginView },
   { path: "/register", name: "register", component: RegisterView },
 
-  // Favoris
-  {
-    path: "/favoris",
-    name: "favoris",
-    component: FavorisView,
-    meta: { requiresAuth: true },
-  },
+  { path: "/favoris", name: "favoris", component: FavorisView, meta: { requiresAuth: true } },
 
-  // Admin
-  {
-    path: "/admin",
-    name: "admin",
-    component: AdminView,
-    meta: { requiresAdmin: true },
-  },
+  { path: "/admin", name: "admin", component: AdminView, meta: { requiresAdmin: true } },
 
-  // Profil
-  {
-    path: "/home",
-    name: "home",
-    component: HomeView,
-    meta: { requiresAuth: true },
-  },
+  { path: "/home", name: "home", component: HomeView, meta: { requiresAuth: true } },
 ];
 
 const router = createRouter({
@@ -58,19 +31,19 @@ const router = createRouter({
 
 // Middleware Auth
 router.beforeEach(async (to) => {
-  const authStore = useAuthStore();  // <-- CHANGÉ
+  const authStore = useAuthStore();
 
-  // Si on a un token mais pas encore le user → on récupère /api/me
+  // Charger l'utilisateur si token présent mais user null
   if (authStore.token && !authStore.user) {
     await authStore.fetchUser();
   }
 
-  // Protection : utilisateur non connecté
-  if (to.meta.requiresAuth && !authStore.token) {
+  // Protection : nécessite d'être connecté
+  if (to.meta.requiresAuth && !authStore.user) {
     return "/login";
   }
 
-  // Protection admin
+  // Protection Admin
   if (to.meta.requiresAdmin && !authStore.user?.roles?.includes("ROLE_ADMIN")) {
     return "/";
   }

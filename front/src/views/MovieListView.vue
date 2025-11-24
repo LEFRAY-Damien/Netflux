@@ -2,28 +2,32 @@
 import { ref, onMounted } from "vue";
 import api from "@/api/axios";
 import { useAuthStore } from "@/stores/auth";
-import { useRouter } from "vue-router";
 
 const authStore = useAuthStore();
-const router = useRouter();
 
 const films = ref([]);
 const series = ref([]);
-const favoris = ref([]); // IDs des contenus favoris
+const favoris = ref([]);
 
-// Charger les favoris utilisateur
+// Charger favoris uniquement si connecté
 const loadFavoris = async () => {
-  if (!authStore.token) return;
+  if (!authStore.token) return; // <-- important
 
   try {
     const res = await api.get("/me");
-    favoris.value = res.data.favoris.map(f => f.id); // liste des IDs
+    favoris.value = res.data.favoris.map(f => f.id);
   } catch (e) {
     console.error("Erreur chargement favoris :", e);
   }
 };
 
+// Toggle favori uniquement si connecté
 const toggleFavori = async (id) => {
+  if (!authStore.token) {
+    alert("Vous devez être connecté pour ajouter en favori");
+    return;
+  }
+
   try {
     const res = await api.post(`/contenus/${id}/favori`);
     const isFav = res.data.favori;
@@ -33,18 +37,13 @@ const toggleFavori = async (id) => {
     } else {
       favoris.value = favoris.value.filter(f => f !== id);
     }
-
   } catch (e) {
     console.error("Erreur toggle favori :", e);
   }
 };
 
+// Chargement initial
 onMounted(async () => {
-  if (!authStore.token) {
-    router.push("/login");
-    return;
-  }
-
   await loadFavoris();
 
   try {
@@ -59,7 +58,6 @@ onMounted(async () => {
   }
 });
 
-// Vérifie si un contenu est favori
 const isFavori = (id) => favoris.value.includes(id);
 </script>
 
@@ -70,15 +68,12 @@ const isFavori = (id) => favoris.value.includes(id);
     <h2 class="mb-3">🎬 Films</h2>
 
     <div class="row">
-      <div 
-        class="col-md-3 mb-4"
-        v-for="film in films"
-        :key="film.id"
-      >
+      <div class="col-md-3 mb-4" v-for="film in films" :key="film.id">
         <div class="card h-100 position-relative">
 
-          <!-- ❤️ Bouton favori -->
+          <!-- ❤️ Bouton favori seulement si connecté -->
           <button
+            v-if="authStore.token"
             class="btn btn-light position-absolute"
             style="top: 10px; right: 10px; z-index: 10;"
             @click.stop="toggleFavori(film.id)"
@@ -111,15 +106,12 @@ const isFavori = (id) => favoris.value.includes(id);
     <h2 class="mb-3">📺 Séries</h2>
 
     <div class="row">
-      <div 
-        class="col-md-3 mb-4"
-        v-for="serie in series"
-        :key="serie.id"
-      >
+      <div class="col-md-3 mb-4" v-for="serie in series" :key="serie.id">
         <div class="card h-100 position-relative">
 
-          <!-- ❤️ Bouton favori -->
+          <!-- ❤️ Favoris seulement si connecté -->
           <button
+            v-if="authStore.token"
             class="btn btn-light position-absolute"
             style="top: 10px; right: 10px; z-index: 10;"
             @click.stop="toggleFavori(serie.id)"
