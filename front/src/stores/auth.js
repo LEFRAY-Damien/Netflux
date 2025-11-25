@@ -30,7 +30,8 @@ export const useAuthStore = defineStore("auth", {
       } catch (err) {
         console.error("Erreur inscription :", err.response?.data || err);
         throw new Error(
-          err.response?.data?.message || "Erreur lors de l'inscription."
+          err.response?.data?.message ||
+            "Erreur lors de l'inscription."
         );
       } finally {
         this.loading = false;
@@ -73,15 +74,14 @@ export const useAuthStore = defineStore("auth", {
       }
 
       try {
-        const response = await api.get("/me", {
-          headers: {
-            Authorization: `Bearer ${this.token}`,
-          },
-        });
+        // Aucun header → Axios met automatiquement Authorization
+        const response = await api.get("/me");
 
         this.user = response.data;
       } catch (err) {
         console.error("Erreur fetchUser :", err.response?.data || err);
+
+        // Token expiré ou invalide
         this.user = null;
         this.token = null;
         localStorage.removeItem("token");
