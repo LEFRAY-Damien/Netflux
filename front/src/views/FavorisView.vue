@@ -1,5 +1,4 @@
-<!-- FavoritesView.vue -->
-
+<!-- FavorisView.vue -->
 <script setup>
 import { ref, onMounted } from "vue";
 import api from "@/api/axios";
@@ -10,89 +9,106 @@ const authStore = useAuthStore();
 const router = useRouter();
 
 const favoris = ref([]);
+const loading = ref(true);
+const errorMsg = ref(null);
 
-// Charger les favoris depuis /me
-const loadFavoris = async () => {
+// Charger favoris depuis l'API
+onMounted(async () => {
   try {
-    const res = await api.get("/me");
-    favoris.value = res.data.favoris || [];
+    const res = await api.get("/me"); // ✅ retourne les favoris du user connecté
+    favoris.value = res.data.favoris ?? [];
+    console.log("✅ Favoris chargés :", favoris.value);
   } catch (e) {
-    console.error("Erreur chargement favoris :", e);
+    console.error("❌ erreur /me :", e);
+    errorMsg.value = "Impossible de charger les favoris";
   }
-};
-
-// Ajouter / supprimer un favori
-const toggleFavori = async (id) => {
-  try {
-    const { data } = await api.post(`/contenus/${id}/favori`);
-    
-    // Si retiré
-    if (!data.favori) {
-      favoris.value = favoris.value.filter(item => item.id !== id);
-    }
-  } catch (e) {
-    console.error("Erreur toggle favori :", e);
-  }
-};
-
-// Aller vers la page détail
-const openDetail = (id) => {
-  router.push(`/contenu/${id}`);
-};
-
-onMounted(() => {
-  if (!authStore.token) {
-    router.push("/login");
-    return;
-  }
-  loadFavoris();
+  loading.value = false;
 });
 </script>
 
 <template>
-  <div class="container mt-4">
-    <h2 class="mb-4">❤️ Mes Favoris</h2>
+<div class="container mt-4">
+  <h2 class="mb-4 text-center">⭐ Mes Favoris</h2>
 
-    <div v-if="favoris.length === 0" class="text-center text-muted mt-5">
-      <p>Aucun favori pour le moment.</p>
-    </div>
+  <div v-if="loading" class="text-center my-5">
+    <div class="spinner-border"></div>
+    <div class="mt-2">Chargement des favoris...</div>
+  </div>
 
-    <div class="row">
+  <div v-if="errorMsg" class="alert alert-danger text-center">{{ errorMsg }}</div>
+
+  <!-- Carousel horizontal -->
+  <div v-if="!loading && !errorMsg" class="d-flex align-items-center">
+    
+    <button class="btn btn-dark btn-sm me-2" @click="document.querySelector('#favScroll')?.scrollBy({ left: -250, behavior: 'smooth'})">
+      ⬅
+    </button>
+    
+    <div id="favScroll" class="d-flex overflow-auto flex-nowrap flex-grow-1 pb-2" style="gap: 15px;">
+      
       <div
-        class="col-md-3 mb-4"
-        v-for="item in favoris"
-        :key="item.id"
+        class="card h-auto position-relative text-center"
+        style="width:220px; min-width:220px;"
+        v-for="contenu in favoris"
+        :key="contenu.id"
       >
-        <div class="card h-100 position-relative">
 
-          <!-- Bouton favori -->
-          <button
-            class="btn btn-light position-absolute"
-            style="top: 10px; right: 10px; z-index: 10;"
-            @click.stop="toggleFavori(item.id)"
-          >
-            ❤️
-          </button>
+        <!-- Bouton supprimer favoris -->
+        <button
+          v-if="authStore.token"
+          class="btn btn-warning btn-sm position-absolute rounded-circle"
+          style="top:8px; right:8px; z-index:10;"
+          @click.stop="contenu.id && api.post('/contenus/' + contenu.id + '/favori').then(()=> favoris = favoris.filter(f=>f!==contenu.id))"
+          title="Retirer des favoris"
+        >
+          ✖
+        </button>
 
-          <div style="cursor: pointer;" @click="openDetail(item.id)">
-            <img 
-              :src="item.affiche" 
-              class="img-fluid"
-              style="max-height: 200px; object-fit: cover;"
-              alt="Affiche"
-            />
+        <!-- Image -->
+        <img
+          :src="contenu.affiche"
+          class="card-img-top img-fluid rounded-top"
+          style="height:200px; width:100%; object-fit:cover;"
+          loading="lazy"
+          @error="(e) => e.target.src = 'https://placehold.co/200x300?text=Indispo'"
+        />
 
-            <div class="card-body">
-              <h5 class="card-title">{{ item.titre }}</h5>
-              <p class="text-muted text-capitalize">
-                {{ item.format }}
-              </p>
-            </div>
+        <!-- Infos -->
+        <div class="card-body p-2">
+          <p class="small fw-bold m-0">{{ contenu.titre }}</p>
+          <div class="text-muted small">
+            Format : {{ contenu.format === "film" ? "Film 🎬" : "Série 📺" }}
           </div>
 
+          <!-- Lien vers détail -->
+          <button
+            class="btn btn-primary btn-sm w-100 mt-2"
+            @click="contenu.id ? routerPush(contenu.id) : null"
+          >
+            🔍 Voir détail
+          </button>
         </div>
       </div>
+
     </div>
 
+    <button class="btn btn-dark btn-sm ms-2" @click="document.querySelector('#favScroll')?.scrollBy({ left: 250, behavior: 'smooth'})">
+      ➡
+    </button>
+
   </div>
+
+  <!-- Si pas de favoris après chargement -->
+  <div v-if="!loading && !errorMsg && favoris.length === 0" class="alert alert-warning text-center mt-4">
+    Tu n'as encore rien ajouté en favoris ⭐
+  </div>
+
+</div>
 </template>
+
+<script>
+// method simple pour pousser vers détail sans enlever Bootstrap
+function routerPush(id) {
+  router.push("/contenus/" + id);
+}
+</script>
