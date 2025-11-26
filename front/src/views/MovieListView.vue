@@ -1,3 +1,4 @@
+<!-- MovieListView.vue -->
 <script setup>
 import { ref, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -12,6 +13,7 @@ const contenus = ref([]);
 const films = ref([]);
 const series = ref([]);
 const favLoading = ref(null);
+
 const filmsContainer = ref(null);
 const seriesContainer = ref(null);
 
@@ -27,7 +29,7 @@ async function loadContenus() {
   applyFilters();
 }
 
-// Appliquer format + activer étoiles si favoris exist
+// Appliquer filtres format + activer étoiles si favoris existent
 function applyFilters() {
   const list = [...contenus.value];
 
@@ -47,10 +49,10 @@ function applyFilters() {
   }
 }
 
-// Toggle favoris
+// Toggle favoris (APPAREIL LOCAL + DB)
 async function toggleFavori(id) {
   favLoading.value = id;
-  await authStore.toggleFavori(id); // action centralisée + persist ✅
+  await authStore.toggleFavori(id);
   applyFilters();
   favLoading.value = null;
 }
@@ -72,19 +74,20 @@ function scrollRight(type) {
 // Au montage
 onMounted(async () => {
   await loadContenus();
-  if (authStore.user && authStore.token && authStore.favoris) {
-    console.log("⭐ favoris persist localStorage:", authStore.favoris);
-  }
+  if (authStore.token) await authStore.fetchFavoris();
 });
 
 // Réagir aux changements URL
 watch(() => route.query.format, applyFilters);
+watch(() => route.query.search, applyFilters);
 </script>
 
 <template>
 <div class="container mt-4">
 
-  <!-- Films -->
+  <h2 class="mb-4 text-center">Films & Séries</h2>
+
+  <!-- LIGNE FILMS -->
   <div class="mb-5" v-if="films.length">
     <div class="d-flex justify-content-between align-items-center mb-2">
       <h4>🎬 Films</h4>
@@ -93,24 +96,31 @@ watch(() => route.query.format, applyFilters);
         <button class="btn btn-sm btn-dark" @click="scrollRight('films')">➡</button>
       </div>
     </div>
+
     <div class="d-flex overflow-auto flex-nowrap" ref="filmsContainer" style="gap:15px;">
       <div class="card border-0 shadow-sm text-center position-relative"
            style="width:220px; min-width:220px;"
            v-for="film in films"
            :key="film.id"
       >
-        <button class="btn btn-light btn-sm position-absolute rounded-circle"
-                style="top:6px;right:6px;z-index:10;"
-                @click.stop="toggleFavori(film.id)"
-                :disabled="favLoading===film.id"
+        <!-- ⭐ ÉTOILE → seulement si connecté -->
+        <button
+          v-if="authStore.token"
+          class="btn btn-light btn-sm position-absolute rounded-circle"
+          style="top:6px; right:6px; z-index:10;"
+          @click.stop="toggleFavori(film.id)"
+          :disabled="favLoading===film.id"
+          title="Ajouter / retirer favoris"
         >
           <span v-if="isFavourite(film.id)">⭐</span>
           <span v-else>☆</span>
         </button>
 
+        <!-- IMAGE -->
         <img :src="film.affiche" style="height:280px;width:100%;object-fit:cover;"
              loading="lazy" @error="onImageError" />
 
+        <!-- TITRE + DÉTAIL -->
         <div class="card-body p-2">
           <p class="fw-bold small m-1">{{ film.titre }}</p>
           <p class="text-muted small m-0">{{ film.format }}</p>
@@ -123,7 +133,7 @@ watch(() => route.query.format, applyFilters);
     </div>
   </div>
 
-  <!-- Séries -->
+  <!-- LIGNE SERIES -->
   <div v-if="series.length">
     <div class="d-flex justify-content-between align-items-center mb-2">
       <h4>📺 Séries</h4>
@@ -132,24 +142,31 @@ watch(() => route.query.format, applyFilters);
         <button class="btn btn-sm btn-dark" @click="scrollRight('series')">➡</button>
       </div>
     </div>
+
     <div class="d-flex overflow-auto flex-nowrap" ref="seriesContainer" style="gap:15px;">
       <div class="card border-0 shadow-sm text-center position-relative"
            style="width:220px; min-width:220px;"
            v-for="serie in series"
            :key="serie.id"
       >
-        <button class="btn btn-light btn-sm position-absolute rounded-circle"
-                style="top:6px;right:6px;z-index:10;"
-                @click.stop="toggleFavori(serie.id)"
-                :disabled="favLoading===serie.id"
+        <!-- ⭐ ÉTOILE → seulement si connecté -->
+        <button
+          v-if="authStore.token"
+          class="btn btn-light btn-sm position-absolute rounded-circle"
+          style="top:6px; right:6px; z-index:10;"
+          @click.stop="toggleFavori(serie.id)"
+          :disabled="favLoading===serie.id"
+          title="Ajouter / retirer favoris"
         >
           <span v-if="isFavourite(serie.id)">⭐</span>
           <span v-else>☆</span>
         </button>
 
+        <!-- IMAGE -->
         <img :src="serie.affiche" style="height:280px;width:100%;object-fit:cover;"
              loading="lazy" @error="onImageError" />
 
+        <!-- TITRE + DÉTAIL -->
         <div class="card-body p-2">
           <p class="fw-bold small m-1">{{ serie.titre }}</p>
           <p class="text-muted small m-0">{{ serie.format }}</p>
@@ -162,7 +179,7 @@ watch(() => route.query.format, applyFilters);
     </div>
   </div>
 
-  <!-- Rien -->
+  <!-- SI RIEN -->
   <div v-if="!films.length && !series.length" class="alert alert-warning text-center">
     Aucun contenu trouvé
   </div>
