@@ -1,9 +1,9 @@
 <!-- FavorisView.vue -->
 <script setup>
 import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import api from "@/api/axios";
 import { useAuthStore } from "@/stores/auth";
-import { useRouter } from "vue-router";
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -12,103 +12,115 @@ const favoris = ref([]);
 const loading = ref(true);
 const errorMsg = ref(null);
 
-// Charger favoris depuis l'API
+// Charger la liste des favoris depuis l'API
 onMounted(async () => {
+  loading.value = true;
   try {
-    const res = await api.get("/me"); // ✅ retourne les favoris du user connecté
+    const res = await api.get("/me");
     favoris.value = res.data.favoris ?? [];
-    console.log("✅ Favoris chargés :", favoris.value);
   } catch (e) {
-    console.error("❌ erreur /me :", e);
-    errorMsg.value = "Impossible de charger les favoris";
+    errorMsg.value = "Erreur lors du chargement des favoris";
   }
   loading.value = false;
 });
 </script>
 
 <template>
-<div class="container mt-4">
-  <h2 class="mb-4 text-center">⭐ Mes Favoris</h2>
+  <div class="container mt-4">
 
-  <div v-if="loading" class="text-center my-5">
-    <div class="spinner-border"></div>
-    <div class="mt-2">Chargement des favoris...</div>
-  </div>
+    <h2 class="text-center mb-4">⭐ Mes Favoris</h2>
 
-  <div v-if="errorMsg" class="alert alert-danger text-center">{{ errorMsg }}</div>
+    <!-- LOADER -->
+    <div v-if="loading" class="text-center my-5">
+      <div class="spinner-border"></div>
+    </div>
 
-  <!-- Carousel horizontal -->
-  <div v-if="!loading && !errorMsg" class="d-flex align-items-center">
-    
-    <button class="btn btn-dark btn-sm me-2" @click="document.querySelector('#favScroll')?.scrollBy({ left: -250, behavior: 'smooth'})">
-      ⬅
-    </button>
-    
-    <div id="favScroll" class="d-flex overflow-auto flex-nowrap flex-grow-1 pb-2" style="gap: 15px;">
-      
+    <!-- ERREUR -->
+    <div v-if="errorMsg" class="alert alert-danger text-center">
+      {{ errorMsg }}
+    </div>
+
+    <!-- ✅ LISTE FAVORIS + CAROUSEL NETFLIX -->
+    <div v-if="!loading && !errorMsg" class="d-flex overflow-auto flex-nowrap pb-2" style="gap: 15px;">
+
       <div
-        class="card h-auto position-relative text-center"
+        class="card border-0 text-center position-relative shadow-sm"
         style="width:220px; min-width:220px;"
         v-for="contenu in favoris"
         :key="contenu.id"
       >
 
-        <!-- Bouton supprimer favoris -->
+        <!-- BOUTON FAVORI PERSISTENT -->
         <button
           v-if="authStore.token"
-          class="btn btn-warning btn-sm position-absolute rounded-circle"
-          style="top:8px; right:8px; z-index:10;"
-          @click.stop="contenu.id && api.post('/contenus/' + contenu.id + '/favori').then(()=> favoris = favoris.filter(f=>f!==contenu.id))"
+          class="btn btn-light btn-sm rounded-circle position-absolute"
+          style="top:6px; right:6px; z-index:10;"
+          @click.stop="toggleFavori(contenu.id)"
           title="Retirer des favoris"
         >
-          ✖
+          <span v-if="authStore.favoris.includes(contenu.id)">⭐</span>
+          <span v-else>☆</span>
         </button>
 
-        <!-- Image -->
+        <!-- IMAGE -->
         <img
           :src="contenu.affiche"
           class="card-img-top img-fluid rounded-top"
-          style="height:200px; width:100%; object-fit:cover;"
+          style="height:280px; width:100%; object-fit:cover;"
           loading="lazy"
-          @error="(e) => e.target.src = 'https://placehold.co/200x300?text=Indispo'"
+          @error="(e) => e.target.src='https://placehold.co/200x280?text=Image+indispo'"
         />
 
-        <!-- Infos -->
+        <!-- BODY -->
         <div class="card-body p-2">
-          <p class="small fw-bold m-0">{{ contenu.titre }}</p>
-          <div class="text-muted small">
-            Format : {{ contenu.format === "film" ? "Film 🎬" : "Série 📺" }}
+          <h6 class="small fw-bold m-0">{{ contenu.titre }}</h6>
+
+          <!-- FORMAT à la place de TYPE -->
+          <div class="text-muted small mt-1">
+            {{ contenu.format === "film" ? "🎬 Film" : "📺 Série" }}
           </div>
 
-          <!-- Lien vers détail -->
+          <!-- BOUTON DETAIL -->
           <button
             class="btn btn-primary btn-sm w-100 mt-2"
-            @click="contenu.id ? routerPush(contenu.id) : null"
+            @click.stop="router.push('/contenus/' + contenu.id)"
           >
             🔍 Voir détail
           </button>
+
+          <!-- BOUTON SUPPRIMER DU BACKEND -->
+          <button
+            class="btn btn-warning btn-sm w-100 mt-1"
+            @click.stop="toggleDelete(contenu.id)"
+          >
+            ⭐ Retirer
+          </button>
         </div>
+
       </div>
 
     </div>
 
-    <button class="btn btn-dark btn-sm ms-2" @click="document.querySelector('#favScroll')?.scrollBy({ left: 250, behavior: 'smooth'})">
-      ➡
-    </button>
+    <!-- SI PAS DE FAVORIS -->
+    <div v-if="!loading && !errorMsg && favoris.length === 0" class="alert alert-warning text-center mt-4">
+      Aucun contenu enregistré en favoris.
+    </div>
 
   </div>
-
-  <!-- Si pas de favoris après chargement -->
-  <div v-if="!loading && !errorMsg && favoris.length === 0" class="alert alert-warning text-center mt-4">
-    Tu n'as encore rien ajouté en favoris ⭐
-  </div>
-
-</div>
 </template>
 
 <script>
-// method simple pour pousser vers détail sans enlever Bootstrap
-function routerPush(id) {
-  router.push("/contenus/" + id);
-}
+// ⭐ Fonction simple, débutant friendly
+import { useAuthStore } from "@/stores/auth";
+
+const toggleDelete = async (id) => {
+  const auth = useAuthStore();
+  try {
+    await api.post("/contenus/" + id + "/favori"); // atteint backend toggle
+    await auth.fetchFavoris(); // recharge la liste après suppression
+    favoris.value = favoris.value.filter(c => c.id !== id);
+  } catch(e) {
+    console.error("Erreur suppression favoris", e);
+  }
+};
 </script>
