@@ -311,15 +311,20 @@ export default {
 
     async deleteItem(id) {
       if (!confirm("Confirmer la suppression ?")) return;
-      await api.delete(`/api/utilisateurs/${id}`, {
-        headers: {
-          Authorization: "Bearer " + this.authStore.token
-
-        }
-      });
-      ;
-      this.loadContenus();
+      try {
+        await api.delete(`/contenus/${id}`, {
+          headers: {
+            Authorization: "Bearer " + this.authStore.token
+          }
+        });
+        console.log("✅ Contenu supprimé :", id);
+        await this.loadContenus(); // refresh liste contenus
+      } catch (e) {
+        console.error("❌ erreur DELETE contenu :", e);
+        alert("Suppression impossible !");
+      }
     },
+
 
     /* ===========================
        UTILISATEURS
@@ -346,14 +351,21 @@ export default {
         roles: this.rolesInput.split(",").map(r => r.trim())
       };
 
+      // ✅ URL corrigée (on retire "/api/" car Axios a déjà baseURL: /api)
       await api.patch(`/utilisateurs/${this.userForm.id}`, payload, {
-        headers: { "Content-Type": "application/merge-patch+json" }
+        headers: {
+          Authorization: "Bearer " + this.authStore.token,
+          "Content-Type": "application/merge-patch+json"
+        }
       });
 
+      // ✅ Recharge et ferme le modal proprement
       await this.loadUsers();
       this.modalUserInstance?.hide();
 
+      console.log("✅ utilisateur modifié OK :", this.userForm.id);
     },
+
 
     async deleteUser(id) {
       if (!confirm("Supprimer cet utilisateur ?")) return;
