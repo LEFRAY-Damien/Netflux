@@ -48,8 +48,7 @@
             <td><img :src="c.affiche" width="60" class="img-thumbnail" /></td>
             <td>{{ c.format }}</td>
             <td>
-              <span v-if="Array.isArray(c.genres)" v-for="g in c.genres" :key="g.id"
-                    class="badge bg-secondary me-1">
+              <span v-if="Array.isArray(c.genres)" v-for="g in c.genres" :key="g.id" class="badge bg-secondary me-1">
                 {{ g.nom }}
               </span>
               <span v-else>—</span>
@@ -166,7 +165,8 @@
       </table>
 
       <!-- Modal Utilisateur -->
-      <div class="modal fade" id="modalUser" tabindex="-1">
+      <div class="modal fade" id="modalUser" tabindex="-1" ref="modalUserEl">
+
         <div class="modal-dialog">
           <div class="modal-content">
             <form @submit.prevent="submitUser">
@@ -210,10 +210,12 @@
 <script>
 import api from "@/api/axios.js";
 import * as bootstrap from "bootstrap";
+import { useAuthStore } from "@/stores/auth.js";
 
 export default {
   data() {
     return {
+      authStore: useAuthStore(),
       activeTab: "contenus",
 
       // contenus
@@ -228,7 +230,8 @@ export default {
       users: [],
       userForm: {},
       rolesInput: "",
-      modalUser: null
+      modalUser: null,
+      modalUserInstance: null,
     };
   },
 
@@ -308,7 +311,13 @@ export default {
 
     async deleteItem(id) {
       if (!confirm("Confirmer la suppression ?")) return;
-      await api.delete(`/contenus/${id}`);
+      await api.delete(`/api/utilisateurs/${id}`, {
+        headers: {
+          Authorization: "Bearer " + this.authStore.token
+
+        }
+      });
+      ;
       this.loadContenus();
     },
 
@@ -324,10 +333,11 @@ export default {
       this.userForm = { ...user };
       this.rolesInput = user.roles.join(", ");
 
-      if (!this.modalUser) {
-        this.modalUser = new bootstrap.Modal("#modalUser");
+      if (!this.modalUserInstance) {
+        this.modalUserInstance = new bootstrap.Modal("#modalUser");
       }
-      this.modalUser.show();
+      this.modalUserInstance.show();
+
     },
 
     async submitUser() {
@@ -340,14 +350,16 @@ export default {
         headers: { "Content-Type": "application/merge-patch+json" }
       });
 
-      this.loadUsers();
-      this.modalUser.hide();
+      await this.loadUsers();
+      this.modalUserInstance?.hide();
+
     },
 
     async deleteUser(id) {
       if (!confirm("Supprimer cet utilisateur ?")) return;
       await api.delete(`/utilisateurs/${id}`);
-      this.loadUsers();
+      await this.loadUsers();
+
     }
   },
 
