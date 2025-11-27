@@ -1,6 +1,6 @@
 <!-- Navbar.vue -->
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import api from "@/api/axios";
 import { useAuthStore } from "@/stores/auth";
@@ -31,7 +31,6 @@ watch(selectedFormat, (value) => {
   });
 });
 
-// ✅ Mise à jour de l’URL pour la recherche
 watch(keyword, (value) => {
   router.replace({
     path: "/",
@@ -40,7 +39,15 @@ watch(keyword, (value) => {
       search: value || undefined
     }
   });
+
+  // 🔍 Lire la recherche depuis l'URL (toujours à jour)
+  const searchQuery = computed(() => route.query.search?.toLowerCase() || "");
+
+
+  // 🔥 forcer un event pour que la page liste refiltre
+  window.dispatchEvent(new Event("storage"));
 });
+
 
 // Charger les genres (pas utilisé encore, mais on laisse le fetch pour après)
 onMounted(async () => {
@@ -52,63 +59,64 @@ onMounted(async () => {
     console.error("❌ Erreur genres :", e);
   }
 });
+
+// 🔄 quand l'URL change, informer le composant liste
+watch(() => route.query.search, () => {
+  router.push({ query: { ...route.query } });
+});
+
 </script>
 
 <template>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
-  <!-- Logo / nom app -->
-  <router-link to="/" class="navbar-brand">Netflux</router-link>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
+    <!-- Logo / nom app -->
+    <router-link to="/" class="navbar-brand">Netflux</router-link>
 
-  <!-- Bouton mobile -->
-  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-    <span class="navbar-toggler-icon"></span>
-  </button>
+    <!-- Bouton mobile -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-  <!-- Contenu nav -->
-  <div class="collapse navbar-collapse" id="navbarNav">
+    <!-- Contenu nav -->
+    <div class="collapse navbar-collapse" id="navbarNav">
 
-    <!-- 🎯 FILTRES A GAUCHE : format + recherche -->
-    <ul class="navbar-nav me-auto">
-      <li class="nav-item d-flex align-items-center gap-2">
-        <!-- Format film/serie -->
-        <select v-model="selectedFormat" class="form-select form-select-sm" style="width:120px;">
-          <option value="">Tous</option>
-          <option value="film">Films</option>
-          <option value="serie">Séries</option>
-        </select>
+      <!-- 🎯 FILTRES A GAUCHE : format + recherche -->
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item d-flex align-items-center gap-2">
+          <!-- Format film/serie -->
+          <select v-model="selectedFormat" class="form-select form-select-sm" style="width:120px;">
+            <option value="">Tous</option>
+            <option value="film">Films</option>
+            <option value="serie">Séries</option>
+          </select>
 
-        <!-- Recherche par titre -->
-        <input
-          v-model="keyword"
-          type="text"
-          class="form-control form-control-sm"
-          placeholder="Rechercher..."
-          style="width:150px;"
-        />
-      </li>
-    </ul>
-
-    <!-- 🔑 AUTH A DROITE : navigation utilisateur + favoris + admin si role -->
-    <ul class="navbar-nav ms-auto">
-      <template v-if="!authStore.token">
-        <li class="nav-item"><router-link class="nav-link" to="/login">Connexion</router-link></li>
-        <li class="nav-item"><router-link class="nav-link" to="/register">Inscription</router-link></li>
-      </template>
-
-      <template v-else>
-        <li class="nav-item"><router-link class="nav-link" to="/home">Profil</router-link></li>
-        <li class="nav-item"><router-link class="nav-link" to="/favoris">Favoris</router-link></li>
-
-        <li class="nav-item" v-if="authStore.user?.roles?.includes('ROLE_ADMIN')">
-          <router-link class="nav-link" to="/admin">Admin</router-link>
+          <!-- Recherche par titre -->
+          <input v-model="keyword" type="text" class="form-control form-control-sm" placeholder="Rechercher..."
+            style="width:150px;" />
         </li>
+      </ul>
 
-        <li class="nav-item">
-          <button class="btn btn-danger btn-sm ms-2" @click="logout">Déconnexion</button>
-        </li>
-      </template>
-    </ul>
+      <!-- 🔑 AUTH A DROITE : navigation utilisateur + favoris + admin si role -->
+      <ul class="navbar-nav ms-auto">
+        <template v-if="!authStore.token">
+          <li class="nav-item"><router-link class="nav-link" to="/login">Connexion</router-link></li>
+          <li class="nav-item"><router-link class="nav-link" to="/register">Inscription</router-link></li>
+        </template>
 
-  </div>
-</nav>
+        <template v-else>
+          <li class="nav-item"><router-link class="nav-link" to="/home">Profil</router-link></li>
+          <li class="nav-item"><router-link class="nav-link" to="/favoris">Favoris</router-link></li>
+
+          <li class="nav-item" v-if="authStore.user?.roles?.includes('ROLE_ADMIN')">
+            <router-link class="nav-link" to="/admin">Admin</router-link>
+          </li>
+
+          <li class="nav-item">
+            <button class="btn btn-danger btn-sm ms-2" @click="logout">Déconnexion</button>
+          </li>
+        </template>
+      </ul>
+
+    </div>
+  </nav>
 </template>

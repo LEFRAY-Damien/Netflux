@@ -1,6 +1,6 @@
 <!-- MovieListView.vue -->
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import api from "@/api/axios";
 import { useAuthStore } from "@/stores/auth";
@@ -37,18 +37,26 @@ async function loadContenus() {
   applyFilters();
 }
 
+const searchQuery = computed(() => route.query.search?.toLowerCase() || "");
+
+watch(searchQuery, applyFilters);
+
 
 function applyFilters() {
   const favorisPersistes = JSON.parse(localStorage.getItem("favoris") || "[]");
-
   const list = [...contenus.value];
 
-  const f = list.filter(c => c.format === "film").map(c => ({
+  // Utiliser searchQuery au lieu de route.query.search
+  const q = searchQuery.value;
+
+  const f = list.filter(c => c.format === "film" && c.titre.toLowerCase().includes(q)).map(c => ({
+
     ...c,
     isFavourite: favorisPersistes.includes(c.id),
   }));
 
-  const s = list.filter(c => c.format === "serie").map(c => ({
+  const s = list.filter(c => c.format === "serie" && c.titre.toLowerCase().includes(q)).map(c => ({
+
     ...c,
     isFavourite: favorisPersistes.includes(c.id),
   }));
@@ -66,6 +74,7 @@ function applyFilters() {
     series.value = s;
   }
 }
+
 
 
 // Toggle favoris (APPAREIL LOCAL + DB)
@@ -91,11 +100,14 @@ function scrollRight(type) {
   el?.scrollBy({ left: 250, behavior: "smooth" });
 }
 
-// Au montage
 onMounted(async () => {
   await loadContenus();
-  if (authStore.token) await authStore.fetchFavoris();
 });
+
+
+
+// 👉 AJOUTE ICI l’écoute de localStorage pour re-filtrer quand la navbar trigger
+window.addEventListener("storage", applyFilters);
 
 // Réagir aux changements URL
 watch(() => route.query.format, applyFilters);
