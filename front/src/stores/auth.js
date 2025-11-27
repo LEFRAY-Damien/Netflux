@@ -36,15 +36,34 @@ export const useAuthStore = defineStore("auth", {
     },
 
     async fetchFavoris() {
-      if (!this.token) return;
-      try {
-        const res = await api.get("/me");
-        this.favoris = (res.data.favoris || []).map(f => f.id);
+      if (!this.token) {
+        this.favoris = [];
+        localStorage.setItem("favoris", "[]");
+        return;
+      }
 
-        // 🧠 Sauvegarde ID dans localStorage
-        localStorage.setItem("favoris", JSON.stringify(this.favoris));
-      } catch {}
-    },
+      try {
+        const res = await api.get("/me", {
+          headers: { Authorization: "Bearer " + this.token }
+        });
+
+        console.log("🎯 JSON API /me :", res.data);
+
+        // ✅ Lire les IDs depuis res.data.favoris directement
+        const ids = res.data.favoris || [];
+
+        this.favoris = ids;
+        localStorage.setItem("favoris", JSON.stringify(ids));
+
+        console.log("✅ IDs favoris persistés :", ids);
+      } catch (e) {
+        console.error("❌ erreur fetchFavoris :", e);
+        this.favoris = [];
+        localStorage.setItem("favoris", "[]");
+      }
+    }
+    ,
+
 
     async toggleFavori(id) {
       if (!this.token) return alert("Connecte-toi !");
@@ -59,16 +78,22 @@ export const useAuthStore = defineStore("auth", {
 
         // ⭐ Persistance mise à jour
         localStorage.setItem("favoris", JSON.stringify(this.favoris));
-      } catch {}
+      } catch { }
     },
 
     logout() {
       this.user = null;
       this.token = null;
       this.error = null;
-      this.favoris = [];
+
       localStorage.removeItem("token");
-      localStorage.removeItem("favoris");
+      localStorage.setItem("favoris", JSON.stringify(this.favoris));
+
+      // 🔥 Envoyer un event personnalisé pour dire au composant liste de restaurer l’icône ⭐
+      window.dispatchEvent(new CustomEvent("auth:logout"));
+
+      console.log("🚪 Logout → IDs conservés :", this.favoris);
     }
+
   }
 });

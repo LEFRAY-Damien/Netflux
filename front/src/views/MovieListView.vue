@@ -17,7 +17,6 @@ const favLoading = ref(null);
 const filmsContainer = ref(null);
 const seriesContainer = ref(null);
 
-// Fallback image
 function onImageError(e) {
   e.target.src = "https://placehold.co/200x280?text=Image+indispo";
 }
@@ -26,7 +25,6 @@ async function loadContenus() {
   const res = await api.get("/contenus");
   const list = res.data.member ?? [];
 
-  // ⭐ récupérer les IDs depuis localStorage et marquer les contenus favoris
   const favorisPersistes = JSON.parse(localStorage.getItem("favoris") || "[]");
 
   contenus.value = list.map(c => ({
@@ -46,7 +44,6 @@ function applyFilters() {
   const favorisPersistes = JSON.parse(localStorage.getItem("favoris") || "[]");
   const list = [...contenus.value];
 
-  // Utiliser searchQuery au lieu de route.query.search
   const q = searchQuery.value;
 
   const f = list.filter(c => c.format === "film" && c.titre.toLowerCase().includes(q)).map(c => ({
@@ -75,9 +72,6 @@ function applyFilters() {
   }
 }
 
-
-
-// Toggle favoris (APPAREIL LOCAL + DB)
 async function toggleFavori(id) {
   favLoading.value = id;
   await authStore.toggleFavori(id);
@@ -89,8 +83,6 @@ function isFavourite(id) {
   return JSON.parse(localStorage.getItem("favoris") || "[]").includes(id);
 }
 
-
-// Scroll carousel
 function scrollLeft(type) {
   const el = type === "films" ? filmsContainer.value : seriesContainer.value;
   el?.scrollBy({ left: -250, behavior: "smooth" });
@@ -102,16 +94,63 @@ function scrollRight(type) {
 
 onMounted(async () => {
   await loadContenus();
+  restoreFavourites(); // ⭐ Ajouté : restaurer immédiatement après chargement
+});
+
+// ⭐ lire les favoris depuis localStorage pour UI
+const favIds = computed(() => JSON.parse(localStorage.getItem("favoris") || "[]"));
+
+// ✅ Marquer les films favoris
+const filmsFiltres = computed(() => {
+  return films.value.map(f => ({
+    ...f,
+    isFavourite: favIds.value.includes(f.id)
+  }));
+});
+
+// ✅ Marquer les séries favorites
+const seriesFiltrees = computed(() => {
+  return series.value.map(s => ({
+    ...s,
+    isFavourite: favIds.value.includes(s.id)
+  }));
+});
+
+// 🔄 Restaurer après logout
+window.addEventListener("auth:logout", () => {
+  applyFilters(); // refresh liste
 });
 
 
+// ⭐ Réactiver les favoris APRES un refresh ou logout
+function restoreFavourites() {
+  const favIds = JSON.parse(localStorage.getItem("favoris") || "[]");
 
-// 👉 AJOUTE ICI l’écoute de localStorage pour re-filtrer quand la navbar trigger
-window.addEventListener("storage", applyFilters);
+  films.value = films.value.map(f => ({
+    ...f,
+    isFavourite: favIds.includes(f.id)
+  }));
 
-// Réagir aux changements URL
+  series.value = series.value.map(s => ({
+    ...s,
+    isFavourite: favIds.includes(s.id)
+  }));
+
+  console.log("⭐ Favoris restaurés :", favIds);
+}
+
+
+window.addEventListener("storage", restoreFavourites);
+
+
 watch(() => route.query.format, applyFilters);
 watch(() => route.query.search, applyFilters);
+
+// 🔥 Quand l’utilisateur se déconnecte, restaurer immédiatement les étoiles pour l'UI
+watch(() => authStore.token, (token) => {
+  if (!token) restoreFavourites(); // si plus de token → déco → restore ⭐
+});
+
 </script>
 
 <template>
@@ -131,7 +170,7 @@ watch(() => route.query.search, applyFilters);
 
       <div class="d-flex overflow-auto flex-nowrap" ref="filmsContainer" style="gap:15px;">
         <div class="card border-0 shadow-sm text-center position-relative" style="width:220px; min-width:220px;"
-          v-for="film in films" :key="film.id">
+          v-for="film in filmsFiltres" :key="film.id">
           <!-- ⭐ ÉTOILE → seulement si connecté -->
           <button v-if="authStore.token" class="btn btn-light btn-sm position-absolute rounded-circle"
             style="top:6px; right:6px; z-index:10;" @click.stop="toggleFavori(film.id)"
@@ -169,7 +208,7 @@ watch(() => route.query.search, applyFilters);
 
       <div class="d-flex overflow-auto flex-nowrap" ref="seriesContainer" style="gap:15px;">
         <div class="card border-0 shadow-sm text-center position-relative" style="width:220px; min-width:220px;"
-          v-for="serie in series" :key="serie.id">
+          v-for="serie in seriesFiltrees" :key="serie.id">
           <!-- ⭐ ÉTOILE → seulement si connecté -->
           <button v-if="authStore.token" class="btn btn-light btn-sm position-absolute rounded-circle"
             style="top:6px; right:6px; z-index:10;" @click.stop="toggleFavori(serie.id)"
