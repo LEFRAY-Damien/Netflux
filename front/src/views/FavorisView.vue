@@ -12,17 +12,35 @@ const favoris = ref([]);
 const loading = ref(true);
 const errorMsg = ref(null);
 
-// Charger la liste des favoris depuis l'API
 onMounted(async () => {
   loading.value = true;
   try {
+    // 1️⃣ Récupérer IDs favoris
     const res = await api.get("/me");
-    favoris.value = res.data.favoris ?? [];
+    const ids = res.data.favoris ?? [];
+
+    console.log("📌 IDs favoris reçus :", ids);
+
+    if (ids.length === 0) {
+      favoris.value = [];
+      return (loading.value = false);
+    }
+
+    // 2️⃣ Charger tous les contenus complets
+    const resContenus = await api.get("/contenus");
+    const tousLesContenus = resContenus.data.member ?? [];
+
+    // 3️⃣ Filtrer ceux qui sont dans les favoris
+    favoris.value = tousLesContenus.filter(c => ids.includes(c.id));
+
+    console.log("✅ contenus favoris chargés :", favoris.value);
   } catch (e) {
+    console.error("❌ erreur chargement favoris :", e);
     errorMsg.value = "Erreur lors du chargement des favoris";
   }
   loading.value = false;
 });
+
 
 async function toggleDelete(id) {
   if (!id) {
@@ -80,7 +98,7 @@ async function toggleDelete(id) {
 
         <!-- IMAGE -->
         <img :src="contenu.affiche" class="card-img-top img-fluid rounded-top"
-          style="height:280px; width:100%; object-fit:cover;" loading="lazy"
+          style="height:180px; width:100%; object-fit:cover;" loading="lazy"
           @error="(e) => e.target.src = 'https://placehold.co/200x280?text=Image+indispo'" />
 
         <!-- BODY -->
@@ -92,16 +110,16 @@ async function toggleDelete(id) {
             {{ contenu.format === "film" ? "🎬 Film" : "📺 Série" }}
           </div>
 
-          <!-- BOUTON DETAIL -->
-          <button class="btn btn-primary btn-sm w-100 mt-2" @click.stop="router.push('/contenu/' + contenu.id)">
+          <button class="btn btn-primary btn-sm w-100 mt-2"
+            @click.stop="router.push({ name: 'movieDetail', params: { id: contenu.id } })">
             🔍 Voir détail
           </button>
 
-          <!-- BOUTON SUPPRIMER DU BACKEND -->
           <button class="btn btn-warning btn-sm w-100 mt-1" @click.stop="toggleDelete(contenu.id)"
             title="Retirer des favoris">
             ❌ Retirer
           </button>
+
 
         </div>
 

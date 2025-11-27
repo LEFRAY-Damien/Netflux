@@ -181,7 +181,7 @@ watch(() => authStore.token, (token) => {
           </button>
 
           <!-- IMAGE -->
-          <img :src="film.affiche" style="height:280px;width:100%;object-fit:cover;" loading="lazy"
+          <img :src="film.affiche" style="height:180px;width:100%;object-fit:cover;" loading="lazy"
             @error="onImageError" />
 
           <!-- TITRE + DÉTAIL -->
@@ -219,7 +219,7 @@ watch(() => authStore.token, (token) => {
           </button>
 
           <!-- IMAGE -->
-          <img :src="serie.affiche" style="height:280px;width:100%;object-fit:cover;" loading="lazy"
+          <img :src="serie.affiche" style="height:180px;width:100%;object-fit:cover;" loading="lazy"
             @error="onImageError" />
 
           <!-- TITRE + DÉTAIL -->
