@@ -16,9 +16,6 @@
       </li>
     </ul>
 
-    <!-- ======================================================================
-         ONGLET CONTENUS  (TON CODE ORIGINAL)
-    ====================================================================== -->
     <div v-if="activeTab === 'contenus'">
 
       <h1 class="mb-4">Administration des contenus</h1>
@@ -130,9 +127,6 @@
 
     </div>
 
-    <!-- ======================================================================
-         ONGLET UTILISATEURS
-    ====================================================================== -->
     <div v-if="activeTab === 'users'">
 
       <h2 class="mb-4">Gestion des utilisateurs</h2>
@@ -221,7 +215,16 @@ export default {
       // contenus
       contenus: [],
       allGenres: [],
-      form: {},
+      form: {
+        titre: "",
+        affiche: "",
+        description: "",
+        anneeSortie: "",
+        video: "",
+        format: "film",
+        genres: []  
+      },
+
       isEditing: false,
       currentId: null,
       modalInstance: null,
@@ -271,14 +274,20 @@ export default {
       this.currentId = id;
 
       this.form = {
-        titre: item.titre,
-        affiche: item.affiche,
-        description: item.description,
-        anneeSortie: item.anneeSortie?.split("T")[0],
-        video: item.video,
-        format: item.format,
-        genres: item.genres?.map(g => g["@id"]) || []
+        titre: item.titre ?? "",
+        affiche: item.affiche ?? "",
+        description: item.description ?? "",
+        anneeSortie: item.anneeSortie ? String(item.anneeSortie) + "-01-01" : "",
+
+        video: item.video ?? "",
+        format: item.format ?? "film",
+
+        //  CORRECTION SAFE : on garantit que genres est un tableau même si API retourne null
+        genres: Array.isArray(item.genres)
+          ? item.genres.map(g => g["@id"])
+          : []
       };
+
 
       this.showModal();
     },
@@ -295,19 +304,53 @@ export default {
     },
 
     async submitForm() {
-      const payload = { ...this.form };
+      const payload = {
+        titre: this.form.titre ?? "",
+        description: this.form.description ?? "",
+        affiche: this.form.affiche ?? "",
+        format: this.form.format ?? "film",
+        video: this.form.video ?? "",
 
-      if (this.isEditing) {
-        await api.patch(`/contenus/${this.currentId}`, payload, {
-          headers: { "Content-Type": "application/merge-patch+json" }
-        });
-      } else {
-        await api.post("/contenus", payload);
+        //  Correction : convertir l’année string venant de l’input date en INT
+        anneeSortie: this.form.anneeSortie && !isNaN(String(this.form.anneeSortie).split("-")[0])
+          ? parseInt(String(this.form.anneeSortie).split("-")[0])
+          : null,
+
+        //  Correction : forcer les genres en tableau même si undefined/null
+        genres: Array.isArray(this.form.genres)
+          ? this.form.genres
+          : []
+      };
+
+      try {
+        if (this.isEditing) {
+          await api.patch(`/contenus/${this.currentId}`, payload, {
+            headers: {
+              Authorization: "Bearer " + this.authStore.token,
+              "Content-Type": "application/merge-patch+json"
+            }
+          });
+          console.log("✅ Contenu modifié OK :", this.currentId);
+
+        } else {
+          await api.post("/contenus", payload, {
+            headers: {
+              Authorization: "Bearer " + this.authStore.token,
+              "Content-Type": "application/ld+json"
+            }
+          });
+
+        }
+
+        await this.loadContenus();
+        this.closeModal();
+
+      } catch (e) {
+        console.error("❌ Erreur API contenu :", e.response?.data || e);
+        alert("Erreur lors de l’enregistrement !");
       }
-
-      this.loadContenus();
-      this.closeModal();
-    },
+    }
+    ,
 
     async deleteItem(id) {
       if (!confirm("Confirmer la suppression ?")) return;

@@ -39,10 +39,10 @@ import { useAuthStore } from "@/stores/auth.js";
 
 const authStore = useAuthStore();
 
-// Si l’utilisateur et token existent → fetchUser
 onMounted(async () => {
   if (!authStore.user && authStore.token) {
     await authStore.fetchUser();
+    console.log("User API response → ", authStore.user);
   }
 });
 </script>

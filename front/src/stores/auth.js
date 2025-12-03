@@ -49,7 +49,7 @@ export const useAuthStore = defineStore("auth", {
 
         console.log("🎯 JSON API /me :", res.data);
 
-        // ✅ Lire les IDs depuis res.data.favoris directement
+        //  Lire les IDs depuis res.data.favoris directement
         const ids = res.data.favoris || [];
 
         this.favoris = ids;
@@ -76,7 +76,7 @@ export const useAuthStore = defineStore("auth", {
           this.favoris = this.favoris.filter(f => f !== id);
         }
 
-        // ⭐ Persistance mise à jour
+        //  Persistance mise à jour
         localStorage.setItem("favoris", JSON.stringify(this.favoris));
       } catch { }
     },
@@ -88,8 +88,6 @@ export const useAuthStore = defineStore("auth", {
 
       localStorage.removeItem("token");
       localStorage.setItem("favoris", JSON.stringify(this.favoris));
-
-      // 🔥 Envoyer un event personnalisé pour dire au composant liste de restaurer l’icône ⭐
       window.dispatchEvent(new CustomEvent("auth:logout"));
 
       console.log("🚪 Logout → IDs conservés :", this.favoris);

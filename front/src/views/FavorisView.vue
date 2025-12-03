@@ -15,7 +15,7 @@ const errorMsg = ref(null);
 onMounted(async () => {
   loading.value = true;
   try {
-    // 1️⃣ Récupérer IDs favoris
+    //  Récupérer IDs favoris
     const res = await api.get("/me");
     const ids = res.data.favoris ?? [];
 
@@ -26,11 +26,11 @@ onMounted(async () => {
       return (loading.value = false);
     }
 
-    // 2️⃣ Charger tous les contenus complets
+    //  Charger tous les contenus complets
     const resContenus = await api.get("/contenus");
     const tousLesContenus = resContenus.data.member ?? [];
 
-    // 3️⃣ Filtrer ceux qui sont dans les favoris
+    //  Filtrer ceux qui sont dans les favoris
     favoris.value = tousLesContenus.filter(c => ids.includes(c.id));
 
     console.log("✅ contenus favoris chargés :", favoris.value);
@@ -49,16 +49,16 @@ async function toggleDelete(id) {
   }
 
   try {
-    // ✅ Appel backend (même route que dans MovieListView)
+    //  Appel backend (même route que dans MovieListView)
     const res = await api.post(`/contenus/${id}/favori`, {}, {
       headers: { Authorization: "Bearer " + authStore.token }
     });
 
-    // ✅ Mise à jour dans Pinia comme dans MovieListView
+    //  Mise à jour dans Pinia comme dans MovieListView
     authStore.favoris = authStore.favoris.filter(f => f !== id);
     localStorage.setItem("favoris", JSON.stringify(authStore.favoris));
 
-    // ✅ On retire l’item localement de la vue (copié de la page qui marche)
+    //  On retire l’item localement de la vue (copié de la page qui marche)
     favoris.value = favoris.value.filter(c => c.id !== id);
 
     console.log("✅ retrait favori OK", res.data);
@@ -87,7 +87,7 @@ async function toggleDelete(id) {
       {{ errorMsg }}
     </div>
 
-    <!-- ✅ LISTE FAVORIS + CAROUSEL NETFLIX -->
+    <!--  LISTE FAVORIS + CAROUSEL NETFLIX -->
     <div v-if="!loading && !errorMsg" class="d-flex overflow-auto flex-nowrap pb-2" style="gap: 15px;">
 
       <div class="card border-0 text-center position-relative shadow-sm" style="width:220px; min-width:220px;"

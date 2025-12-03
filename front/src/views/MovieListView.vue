@@ -94,13 +94,11 @@ function scrollRight(type) {
 
 onMounted(async () => {
   await loadContenus();
-  restoreFavourites(); // ⭐ Ajouté : restaurer immédiatement après chargement
+  restoreFavourites(); 
 });
 
-// ⭐ lire les favoris depuis localStorage pour UI
 const favIds = computed(() => JSON.parse(localStorage.getItem("favoris") || "[]"));
 
-// ✅ Marquer les films favoris
 const filmsFiltres = computed(() => {
   return films.value.map(f => ({
     ...f,
@@ -108,7 +106,6 @@ const filmsFiltres = computed(() => {
   }));
 });
 
-// ✅ Marquer les séries favorites
 const seriesFiltrees = computed(() => {
   return series.value.map(s => ({
     ...s,
@@ -116,13 +113,13 @@ const seriesFiltrees = computed(() => {
   }));
 });
 
-// 🔄 Restaurer après logout
+//  Restaurer après logout
 window.addEventListener("auth:logout", () => {
   applyFilters(); // refresh liste
 });
 
 
-// ⭐ Réactiver les favoris APRES un refresh ou logout
+//  Réactiver les favoris APRES un refresh ou logout
 function restoreFavourites() {
   const favIds = JSON.parse(localStorage.getItem("favoris") || "[]");
 
@@ -146,9 +143,9 @@ window.addEventListener("storage", restoreFavourites);
 watch(() => route.query.format, applyFilters);
 watch(() => route.query.search, applyFilters);
 
-// 🔥 Quand l’utilisateur se déconnecte, restaurer immédiatement les étoiles pour l'UI
+//  Quand l’utilisateur se déconnecte, restaurer immédiatement les étoiles pour l'UI
 watch(() => authStore.token, (token) => {
-  if (!token) restoreFavourites(); // si plus de token → déco → restore ⭐
+  if (!token) restoreFavourites(); // si plus de token → déco → restore 
 });
 
 </script>
@@ -209,7 +206,7 @@ watch(() => authStore.token, (token) => {
       <div class="d-flex overflow-auto flex-nowrap" ref="seriesContainer" style="gap:15px;">
         <div class="card border-0 shadow-sm text-center position-relative" style="width:220px; min-width:220px;"
           v-for="serie in seriesFiltrees" :key="serie.id">
-          <!-- ⭐ ÉTOILE → seulement si connecté -->
+          <!--  ÉTOILE → seulement si connecté -->
           <button v-if="authStore.token" class="btn btn-light btn-sm position-absolute rounded-circle"
             style="top:6px; right:6px; z-index:10;" @click.stop="toggleFavori(serie.id)"
             :disabled="favLoading === serie.id" title="Ajouter / retirer favoris">
