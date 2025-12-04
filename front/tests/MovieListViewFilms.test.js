@@ -5,7 +5,6 @@ import { createRouter, createMemoryHistory } from "vue-router";
 import { server } from "./mocks/server";
 import { http, HttpResponse } from "msw";
 
-// On modifie le handler /contenus pour ce test
 server.use(
   http.get("http://localhost:8000/api/contenus", () => {
     return HttpResponse.json({
@@ -46,17 +45,14 @@ describe("MovieListView.vue - affichage des films et séries", () => {
 
     await router.isReady();
 
-    // attendre le loadContenus()
     await new Promise(resolve => setTimeout(resolve, 60));
 
     const html = wrapper.html();
-
-    // Vérification films
+ 
     expect(html).toContain("🎬 Films");
     expect(html).toContain("Inception");
     expect(html).toContain("Avatar");
 
-    // Vérification séries
     expect(html).toContain("📺 Séries");
     expect(html).toContain("Breaking Bad");
   });
