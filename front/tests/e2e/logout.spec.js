@@ -22,7 +22,7 @@ test("Déconnexion utilisateur – logout fonctionne", async ({ page }) => {
 
 
   // -------------------------------------------------------
-  // 2. Cliquer sur le bouton "Déconnexion"
+  //  bouton "Déconnexion"
   // -------------------------------------------------------
   const logoutButton = page.getByRole('button', { name: /déconnexion|logout|se déconnecter/i });
 
@@ -31,7 +31,7 @@ test("Déconnexion utilisateur – logout fonctionne", async ({ page }) => {
 
 
   // -------------------------------------------------------
-  // 3. TON APP redirige vers "/" → on vérifie "/"
+  //  APP redirige vers "/" 
   // -------------------------------------------------------
   await page.waitForURL('/');
 
@@ -40,15 +40,14 @@ test("Déconnexion utilisateur – logout fonctionne", async ({ page }) => {
 
 
   // -------------------------------------------------------
-  // 4. Vérifier que le token est supprimé
+  //  Vérifier que le token est supprimé
   // -------------------------------------------------------
   const tokenAfter = await page.evaluate(() => localStorage.getItem("token"));
   expect(tokenAfter).toBeNull();
 
 
   // -------------------------------------------------------
-  // 5. Vérifier que le bouton logout n'est PLUS visible
-  //    (preuve que l'UI est en mode déconnecté)
+  //  Vérifier que le bouton logout n'est PLUS visible
   // -------------------------------------------------------
   await expect(logoutButton).not.toBeVisible();
 });
